@@ -3,10 +3,6 @@ require './lib/assets'
 module Dojo
   module Particle
 
-    ACC_DECREASE = 0.9
-    ACC_MAXIMUM = 1.0
-    VEL_MAXIMUM = 5.0
-    
     attr_reader :position
     attr_reader :velocity
 
@@ -20,6 +16,10 @@ module Dojo
         :position => { :x => 0, :y => 0 },
         :velocity => { :x => 0, :y => 0 },
         :color => 0xffffffff,
+        :max_velocity => 0.0,
+        :max_acceleration => 0.0,
+        :acc_decrease => 0.0,
+        :radius => 2.0,
         :enhance => ""
       }.merge( opts )
 
@@ -27,6 +27,10 @@ module Dojo
       @position = defaults[:position]
       @velocity = defaults[:velocity]
       @color = defaults[:color] 
+      @max_velocity = defaults[:max_velocity]
+      @max_acceleration = defaults[:max_acceleration]
+      @acc_decrease = defaults[:acc_decrease]
+      @radius = defaults[:radius]
 
       load_enhance( defaults[:enhance] )  
     end
@@ -35,19 +39,19 @@ module Dojo
       # Convert direction from grades to radians
       direction = Math::PI * direction / 180
 
-      vx_offset = modulus * Math.cos( direction )
-      vy_offset = modulus * Math.sin( direction )
+      acx = Math.cos( direction ) * modulus
+      acy = Math.sin( direction ) * modulus
 
-      @velocity[:x] += ( vx_offset >= 0 ? [ vx_offset, ACC_MAXIMUM ].min : [ vx_offset, ACC_MAXIMUM * -1 ].max ) 
-      @velocity[:y] += ( vy_offset >= 0 ? [ vy_offset, ACC_MAXIMUM ].min : [ vy_offset, ACC_MAXIMUM * -1 ].max ) 
+      @velocity[:x] += [ acx.abs, @max_acceleration ].min * ( acx <=> 0 )
+      @velocity[:y] += [ acy.abs, @max_acceleration ].min * ( acy <=> 0 )
 
-      @velocity[:x] = ( @velocity[:x] >= 0 ? [ @velocity[:x], VEL_MAXIMUM ].min : [ @velocity[:x], VEL_MAXIMUM * -1 ].max )   
-      @velocity[:y] = ( @velocity[:y] >= 0 ? [ @velocity[:y], VEL_MAXIMUM ].min : [ @velocity[:y], VEL_MAXIMUM * -1 ].max )   
+      @velocity[:x] = [ @velocity[:x].abs, @max_velocity ].min * ( @velocity[:x] <=> 0 )   
+      @velocity[:y] = [ @velocity[:y].abs, @max_velocity ].min * ( @velocity[:y] <=> 0 )   
     end
 
     def move
-      @velocity[:x] *= ACC_DECREASE
-      @velocity[:y] *= ACC_DECREASE
+      @velocity[:x] *= @acc_decrease
+      @velocity[:y] *= @acc_decrease
       
       # Move particle according to its velocity
       @position[:x] += @velocity[:x]
@@ -77,10 +81,10 @@ module Dojo
 
     def corners
       [ 
-         @position[:x] - 2, @position[:y] - 2, @color,
-         @position[:x] + 2, @position[:y] - 2, @color,
-         @position[:x] + 2, @position[:y] + 2, @color, 
-         @position[:x] - 2, @position[:y] + 2, @color
+         @position[:x] - @radius, @position[:y] - @radius, @color,
+         @position[:x] + @radius, @position[:y] - @radius, @color,
+         @position[:x] + @radius, @position[:y] + @radius, @color, 
+         @position[:x] - @radius, @position[:y] + @radius, @color
       ] 
     end
 
@@ -90,7 +94,7 @@ module Dojo
 
     def eat( particles )
       particles.each do |p|
-        particles.delete( p ) if self.distance_to( p ) < 2
+        particles.delete( p ) if self.distance_to( p ) < @radius
       end
     end
 

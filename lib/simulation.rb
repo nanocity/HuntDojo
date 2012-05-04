@@ -10,6 +10,16 @@ module Dojo
   PREYS = 100
   HUNTERS = 5
 
+  P_MAX_ACCEL = 0.8
+  P_MAX_VEL = 3
+
+  H_MAX_ACCEL = 0.8
+  H_MAX_VEL = 4
+  RADIUS = 4
+
+  ACC_DECREASE = 0.9
+
+
   class Simulation < Gosu::Window
     
     def initialize( opts = {} )
@@ -22,20 +32,27 @@ module Dojo
 
       @preys = (1..PREYS).collect do
         Dojo::Prey.new( {
-          :bounds => { :width => 800, :height => 600 },
-          :position => { :x => Random.rand( 800 ), :y => Random.rand( 600 ) },
-          :velocity => { :x => Random.rand( 5 ), :y => Random.rand( 5 )},
-          :enhance => defaults[:preys]
+          :bounds => { :width => WINDOW_WIDTH, :height => WINDOW_HEIGHT },
+          :position => { :x => Random.rand( WINDOW_WIDTH ), :y => Random.rand( WINDOW_HEIGHT ) },
+          :velocity => { :x => Random.rand( P_MAX_VEL ), :y => Random.rand( P_MAX_VEL )},
+          :enhance => defaults[:preys],
+          :max_velocity => P_MAX_VEL,
+          :max_acceleration => P_MAX_ACCEL,
+          :acc_decrease => ACC_DECREASE
         })
       end
       
       @hunters = (1..HUNTERS).collect do
         Dojo::Hunter.new( {
-          :bounds => { :width => 800, :height => 600 },
-          :position => { :x => Random.rand( 800 ), :y => Random.rand( 600 ) },
-          :velocity => { :x => Random.rand( 5 ), :y => Random.rand( 5 )},
+          :bounds => { :width =>WINDOW_WIDTH, :height => WINDOW_HEIGHT },
+          :position => { :x => Random.rand( WINDOW_WIDTH ), :y => Random.rand( WINDOW_HEIGHT ) },
+          :velocity => { :x => Random.rand( H_MAX_VEL ), :y => Random.rand( H_MAX_VEL )},
           :color => 0xffff0000,
-          :enhance => defaults[:hunters]
+          :enhance => defaults[:hunters],
+          :max_velocity => H_MAX_VEL,
+          :max_acceleration => H_MAX_ACCEL,
+          :acc_decrease => ACC_DECREASE,
+          :radius => RADIUS
         })
       end
 
@@ -51,6 +68,12 @@ module Dojo
         h.eat @preys
       end
 
+      (0..HUNTERS-1).each do |i|
+        (i+1..HUNTERS-1).each do |j|
+          collision( @hunters[i], @hunters[j] )
+        end
+      end
+
       close if @preys.empty?
     end
 
@@ -60,6 +83,29 @@ module Dojo
       end
     end
 
-  end
+    def collision(p1, p2)
+      return if p1.distance_to( p2 ) > 2 * RADIUS 
 
+      # This math is from http://www.plasmaphysics.org.uk/programs/coll2d_cpp.htm
+      # hunters bounce off one another
+      x21 = p2.position[:x] - p1.position[:x]
+      y21 = p2.position[:y] - p1.position[:y]
+      
+      vx21 = p2.velocity[:x] - p1.velocity[:x]
+      vy21 = p2.velocity[:y] - p1.velocity[:y]
+      
+      # return if balls are not approaching
+      return if vx21*x21 + vy21*y21 >= 0
+      
+      a = y21 / x21
+      dvx2 = -(vx21 + a*vy21)/(1 + a*a)
+      advx2 = a*dvx2
+
+      p2.velocity[:x] += dvx2 * 10
+      p2.velocity[:y] += advx2 * 10
+      
+      p1.velocity[:x] -= dvx2 * 10
+      p1.velocity[:y] -= advx2 * 10
+    end
+  end
 end

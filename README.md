@@ -91,7 +91,7 @@ the creatures behavior is modified.
 
 Things to accomplish to be functional
 
-* --Hunters collisions--
+* Hunters collisions - Done :)
 * Successives simulation in order to calculate average lifetime
 * Avoid infite loops by setting maximum lifetime for hunters if they don't eat
 * Put some informational text on the screen

@@ -36,10 +36,10 @@ module Dojo
 
 
   class Simulation < Gosu::Window
-    
+
     def initialize( opts = {} )
       super( WINDOW_WIDTH, WINDOW_HEIGHT, false )
-     
+
       defaults = {
         :preys => "",
         :hunters => ""
@@ -56,7 +56,7 @@ module Dojo
           :acc_decrease => ACC_DECREASE
         })
       end
-      
+
       @hunters = (1..HUNTERS).collect do
         Dojo::Hunter.new( {
           :bounds => { :width =>WINDOW_WIDTH, :height => WINDOW_HEIGHT },
@@ -99,26 +99,26 @@ module Dojo
     end
 
     def collision(p1, p2)
-      return if p1.distance_to( p2 ) > 2 * RADIUS 
+      return if p1.distance_to( p2 ) > 2 * RADIUS
 
       # This math is from http://www.plasmaphysics.org.uk/programs/coll2d_cpp.htm
       # hunters bounce off one another
       x21 = p2.position[:x] - p1.position[:x]
       y21 = p2.position[:y] - p1.position[:y]
-      
+
       vx21 = p2.velocity[:x] - p1.velocity[:x]
       vy21 = p2.velocity[:y] - p1.velocity[:y]
-      
+
       # return if balls are not approaching
       return if vx21*x21 + vy21*y21 >= 0
-      
+
       a = y21 / x21
       dvx2 = -(vx21 + a*vy21)/(1 + a*a)
       advx2 = a*dvx2
 
       p2.velocity[:x] += dvx2 * 10
       p2.velocity[:y] += advx2 * 10
-      
+
       p1.velocity[:x] -= dvx2 * 10
       p1.velocity[:y] -= advx2 * 10
     end

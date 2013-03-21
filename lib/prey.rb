@@ -16,10 +16,10 @@
 require './lib/particle'
 
 module Dojo
-  
+
   class Prey
     include Dojo::Particle
-  
+
     def update( hunters, preys )
 
       modulus = Random.rand( 5 )

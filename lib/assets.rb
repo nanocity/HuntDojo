@@ -16,18 +16,18 @@
 module Assets
 
   def distance_to( particle )
-    Math.sqrt( 
-      (self.position[:x] - particle.position[:x]) ** 2 + 
-      (self.position[:y] - particle.position[:y]) ** 2 
+    Math.sqrt(
+      (self.position[:x] - particle.position[:x]) ** 2 +
+      (self.position[:y] - particle.position[:y]) ** 2
     )
   end
-  
+
   def angle_to( particle )
-    rad = Math.atan2( 
-      particle.position[:y] - self.position[:y], 
-      particle.position[:x] - self.position[:x] 
-    ) 
-    
+    rad = Math.atan2(
+      particle.position[:y] - self.position[:y],
+      particle.position[:x] - self.position[:x]
+    )
+
     # Convert to grades
     rad * 180 / Math::PI
   end
